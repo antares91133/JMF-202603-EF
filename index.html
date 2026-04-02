@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JMF — Dashboard Financiero Personal — Marzo 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FAFAFA;--card:#FFFFFF;--border:#E8E8E8;--text:#1A1A2E;--text2:#555;--text3:#888;--green:#0F9D58;--red:#DB4437;--blue:#1A73E8;--amber:#F4B400;--purple:#7B1FA2;--teal:#00897B;--remax-blue:#003DA5;--remax-red:#DC1C2E;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow2:0 4px 12px rgba(0,0,0,.08)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+.header{background:var(--card);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.header h1{font-family:'DM Serif Display',serif;font-size:1.35rem;color:var(--text)}
+.header .meta{font-size:.8rem;color:var(--text3)}
+.tabs{display:flex;gap:0;background:var(--card);border-bottom:2px solid var(--border);padding:0 24px;overflow-x:auto;position:sticky;top:60px;z-index:99}
+.tab{padding:12px 20px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:.2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.content{max-width:1400px;margin:0 auto;padding:20px}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow);transition:.2s}
+.kpi:hover{box-shadow:var(--shadow2);transform:translateY(-1px)}
+.kpi-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px}
+.kpi-value{font-family:'JetBrains Mono',monospace;font-size:1.35rem;font-weight:700;color:var(--text)}
+.kpi-change{font-size:.75rem;font-weight:600;margin-top:4px;display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px}
+.kpi-change.pos{color:var(--green);background:#E8F5E9}
+.kpi-change.neg{color:var(--red);background:#FFEBEE}
+.kpi-change.neutral{color:var(--text3);background:#F5F5F5}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.chart-card h3{font-size:.88rem;font-weight:700;margin-bottom:14px;color:var(--text)}
+.chart-wrap{position:relative;width:100%;max-height:320px}
+.section-title{font-family:'DM Serif Display',serif;font-size:1.15rem;margin:28px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+th{background:#F5F5F5;font-weight:600;text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);position:sticky;top:0;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px;color:var(--text2)}
+td{padding:7px 10px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:.75rem}
+tr:hover td{background:#F8F9FA}
+.text-right{text-align:right}
+.text-green{color:var(--green)}
+.text-red{color:var(--red)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700}
+.badge-green{background:#E8F5E9;color:var(--green)}
+.badge-red{background:#FFEBEE;color:var(--red)}
+.badge-amber{background:#FFF8E1;color:#E65100}
+.alert-box{background:#FFF3E0;border:1px solid #FFE0B2;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:.82rem;display:flex;align-items:flex-start;gap:8px}
+.alert-box .icon{font-size:1.1rem}
+.footer{text-align:center;padding:24px;font-size:.72rem;color:var(--text3);border-top:1px solid var(--border);margin-top:40px}
+@media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr}.kpi-strip{grid-template-columns:repeat(2,1fr)}.tabs{padding:0 12px}.tab{padding:10px 14px;font-size:.75rem}.content{padding:14px}}
+.remax-header{background:var(--remax-blue);color:#fff;padding:20px 24px;border-radius:10px;margin-bottom:20px;display:flex;align-items:center;gap:16px}
+.remax-header h2{font-family:'DM Serif Display',serif;font-size:1.3rem}
+.remax-header p{font-size:.82rem;opacity:.85}
+.balloon-svg{width:48px;height:48px}
+.scroll-table{overflow-x:auto;margin-bottom:16px}
+.credit-section{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="header">
+<div><h1>JMF — Estados Financieros Personales</h1><div class="meta">Cierre Marzo 2026 · Datos en USD · Normas Contables del Principado de Andorra</div></div>
+<div style="text-align:right"><div style="font-weight:600;font-size:.85rem">Jesus Martin Frade</div><div class="meta">Agente Inmobiliario — RE/MAX EXPRESS</div></div>
+</div>
+
+<div class="tabs" id="tabs">
+<div class="tab active" data-tab="t1">Patrimonio y Liquidez</div>
+<div class="tab" data-tab="t2">Criptoactivos</div>
+<div class="tab" data-tab="t3">Ingresos y Gastos</div>
+<div class="tab" data-tab="t4">Ing. vs Gas. QQ</div>
+<div class="tab" data-tab="t5">RE/MAX</div>
+</div>
+
+<div class="content">
+
+<!-- ==================== TAB 1: PATRIMONIO Y LIQUIDEZ ==================== -->
+<div class="tab-panel active" id="t1">
+
+<div class="kpi-strip">
+<div class="kpi"><div class="kpi-label">Activos Totales</div><div class="kpi-value">$50.113,71</div><div class="kpi-change neg">▼ -3,9% vs feb</div></div>
+<div class="kpi"><div class="kpi-label">Liquidez Inmediata</div><div class="kpi-value">$2.841,56</div><div class="kpi-change pos">▲ +38,0% vs feb</div></div>
+<div class="kpi"><div class="kpi-label">Capital (Equity)</div><div class="kpi-value">$49.299,32</div><div class="kpi-change neg">▼ -4,1% vs feb</div></div>
+<div class="kpi"><div class="kpi-label">Resultado Acum. 2026</div><div class="kpi-value" style="color:var(--red)">-$11.888,77</div><div class="kpi-change neg">3 meses en pérdida</div></div>
+<div class="kpi"><div class="kpi-label">Situación BCRA</div><div class="kpi-value"><span class="badge badge-green">1 — Normal</span></div><div class="kpi-change neutral">Desde 09/2013</div></div>
+</div>
+
+<div class="alert-box"><span class="icon">⚠️</span><div><strong>Alerta de Tendencia:</strong> El patrimonio ha caído un 40,7% desde el máximo de $84.432 (dic-2024). Los activos acumulan 6 meses consecutivos de descenso, impulsados por la depreciación de criptoactivos (-70,7% desde máximo). La liquidez inmediata se ha estabilizado tras tocar mínimo en febrero ($2.060).</div></div>
+
+<div class="grid-2">
+<div class="chart-card"><h3>Evolución Patrimonial Mensual</h3><div class="chart-wrap"><canvas id="c_patrim"></canvas></div></div>
+<div class="chart-card"><h3>Composición del Activo — Mar 2026</h3><div class="chart-wrap"><canvas id="c_activo_donut"></canvas></div></div>
+</div>
+<div class="grid-2">
+<div class="chart-card"><h3>Superávit / Déficit de Efectivo Mensual</h3><div class="chart-wrap"><canvas id="c_cash_surplus"></canvas></div></div>
+<div class="chart-card"><h3>Ratio de Liquidez (Activos Corrientes / Pasivos Corrientes)</h3><div class="chart-wrap"><canvas id="c_liquidity"></canvas></div></div>
+</div>
+
+<div class="section-title">Crédito Bancario — Informe Nosis (31/12/2025)</div>
+<div class="credit-section">
+<div class="chart-card">
+<h3>Distribución de Deuda por Entidad</h3>
+<div class="chart-wrap" style="max-height:240px"><canvas id="c_credit_donut"></canvas></div>
+</div>
+<div class="chart-card">
+<h3>Detalle de Tarjetas de Crédito — Mar 2026</h3>
+<table>
+<tr><th>Tarjeta</th><th>Titular</th><th class="text-right">Saldo USD</th><th>Situación</th></tr>
+<tr><td>VISA 7653 Supervielle</td><td>Jesús</td><td class="text-right">$326,56 + $8,15 USD</td><td><span class="badge badge-green">Normal</span></td></tr>
+<tr><td>MASTER 8012 Supervielle</td><td>Jesús</td><td class="text-right">$187,22</td><td><span class="badge badge-green">Normal</span></td></tr>
+<tr><td>MASTER 1103 Supervielle</td><td>Belén</td><td class="text-right">$253,04</td><td><span class="badge badge-green">Normal</span></td></tr>
+<tr style="font-weight:700"><td colspan="2">Total Tarjetas</td><td class="text-right">$774,97</td><td></td></tr>
+</table>
+</div>
+</div>
+
+</div>
+
+<!-- ==================== TAB 2: CRIPTOACTIVOS ==================== -->
+<div class="tab-panel" id="t2">
+
+<div class="kpi-strip">
+<div class="kpi"><div class="kpi-label">Valor Total Cripto</div><div class="kpi-value">$16.915,22</div><div class="kpi-change pos">▲ +3,7% vs feb</div></div>
+<div class="kpi"><div class="kpi-label">Concentración BTC</div><div class="kpi-value">81,2%</div><div class="kpi-change neutral">$13.724 (GAD+EXO)</div></div>
+<div class="kpi"><div class="kpi-label">P&L Cripto Mar 2026</div><div class="kpi-value" style="color:var(--green)">+$600,19</div><div class="kpi-change pos">Primer mes positivo en Q1</div></div>
+<div class="kpi"><div class="kpi-label">P&L Cripto Acum. 2026</div><div class="kpi-value" style="color:var(--red)">-$5.295,59</div><div class="kpi-change neg">▼ vs -$9.171 en Q4-25</div></div>
+<div class="kpi"><div class="kpi-label">Var. Interanual</div><div class="kpi-value" style="color:var(--red)">-53,6%</div><div class="kpi-change neg">vs $36.449 mar-25</div></div>
+</div>
+
+<div class="alert-box"><span class="icon">📉</span><div><strong>Alerta Cripto:</strong> Los criptoactivos han perdido el 70,7% de su valor desde el máximo de $57.672 (dic-2024). BTC domina el portfolio al 81,2%. ALGO y DOT presentan pérdidas interanuales superiores al 60%. Marzo mostró la primera recuperación mensual del Q1 (+$600).</div></div>
+
+<div class="grid-2">
+<div class="chart-card"><h3>Distribución por Criptoactivo</h3><div class="chart-wrap"><canvas id="c_crypto_donut"></canvas></div></div>
+<div class="chart-card"><h3>Evolución Valor Total Cripto</h3><div class="chart-wrap"><canvas id="c_crypto_line"></canvas></div></div>
+</div>
+<div class="chart-card"><h3>P&L Cripto Mensual</h3><div class="chart-wrap"><canvas id="c_crypto_pl"></canvas></div></div>
+
+<div class="section-title">Top Posiciones — Marzo 2026</div>
+<div class="scroll-table">
+<table>
+<tr><th>Activo</th><th>Wallet</th><th class="text-right">Valor USD</th><th class="text-right">% Total</th><th class="text-right">Var. vs Feb</th></tr>
+<tr><td>BTC</td><td>Greenadress</td><td class="text-right">$13.701,44</td><td class="text-right">81,0%</td><td class="text-right text-green">+4,7%</td></tr>
+<tr><td>ALGO</td><td>Exodus</td><td class="text-right">$949,24</td><td class="text-right">5,6%</td><td class="text-right text-green">+11,9%</td></tr>
+<tr><td>DOT</td><td>Binance</td><td class="text-right">$795,36</td><td class="text-right">4,7%</td><td class="text-right text-red">-16,2%</td></tr>
+<tr><td>SOL</td><td>Phantom</td><td class="text-right">$486,06</td><td class="text-right">2,9%</td><td class="text-right text-green">+3,5%</td></tr>
+<tr><td>ETH</td><td>Metamask</td><td class="text-right">$338,20</td><td class="text-right">2,0%</td><td class="text-right text-green">+10,4%</td></tr>
+<tr><td>ADA</td><td>Yoroi</td><td class="text-right">$303,97</td><td class="text-right">1,8%</td><td class="text-right text-red">-9,5%</td></tr>
+<tr><td>BNB</td><td>Binance+Meta</td><td class="text-right">$112,12</td><td class="text-right">0,7%</td><td class="text-right text-green">+2,4%</td></tr>
+<tr><td>MNT</td><td>Bybit</td><td class="text-right">$56,72</td><td class="text-right">0,3%</td><td class="text-right text-green">+12,0%</td></tr>
+<tr><td>AVAX</td><td>Binance</td><td class="text-right">$40,97</td><td class="text-right">0,2%</td><td class="text-right text-green">+3,6%</td></tr>
+<tr><td>XLM</td><td>Nexo</td><td class="text-right">$38,45</td><td class="text-right">0,2%</td><td class="text-right text-green">+11,0%</td></tr>
+<tr><td>Otros (18 activos)</td><td>Varios</td><td class="text-right">$92,69</td><td class="text-right">0,6%</td><td class="text-right">—</td></tr>
+<tr style="font-weight:700;background:#F5F5F5"><td colspan="2">TOTAL</td><td class="text-right">$16.915,22</td><td class="text-right">100%</td><td class="text-right text-green">+3,7%</td></tr>
+</table>
+</div>
+
+<div class="section-title">Variación Interanual — Q1 2026 vs Q1 2025</div>
+<div class="scroll-table">
+<table>
+<tr><th>Activo</th><th class="text-right">Mar 2026</th><th class="text-right">Mar 2025</th><th class="text-right">Var. %</th><th class="text-right">P&L Q1 2026</th><th class="text-right">P&L Q1 2025</th></tr>
+<tr><td>BTC (Total)</td><td class="text-right">$13.724,25</td><td class="text-right">$29.259,87</td><td class="text-right text-red">-53,1%</td><td class="text-right text-red">-$4.132,48</td><td class="text-right text-red">-$4.510,73</td></tr>
+<tr><td>ALGO</td><td class="text-right">$949,24</td><td class="text-right">$1.790,84</td><td class="text-right text-red">-47,0%</td><td class="text-right text-red">-$218,41</td><td class="text-right text-red">-$1.586,10</td></tr>
+<tr><td>DOT (Total)</td><td class="text-right">$797,20</td><td class="text-right">$2.414,40</td><td class="text-right text-red">-67,0%</td><td class="text-right text-red">-$350,57</td><td class="text-right text-red">-$1.486,07</td></tr>
+<tr><td>SOL</td><td class="text-right">$486,06</td><td class="text-right">$688,73</td><td class="text-right text-red">-29,4%</td><td class="text-right text-red">-$230,67</td><td class="text-right text-red">-$339,93</td></tr>
+<tr><td>ETH</td><td class="text-right">$338,20</td><td class="text-right">$295,27</td><td class="text-right text-green">+14,5%</td><td class="text-right text-red">-$142,54</td><td class="text-right text-red">-$247,78</td></tr>
+<tr><td>ADA</td><td class="text-right">$303,97</td><td class="text-right">$795,06</td><td class="text-right text-red">-61,8%</td><td class="text-right text-red">-$135,23</td><td class="text-right text-red">-$240,13</td></tr>
+<tr style="font-weight:700;background:#F5F5F5"><td>TOTAL CRIPTO</td><td class="text-right">$16.915,22</td><td class="text-right">$36.448,79</td><td class="text-right text-red">-53,6%</td><td class="text-right text-red">-$5.295,59</td><td class="text-right text-red">-$8.915,04</td></tr>
+</table>
+</div>
+</div>
+
+<!-- ==================== TAB 3: INGRESOS Y GASTOS ==================== -->
+<div class="tab-panel" id="t3">
+
+<div class="kpi-strip">
+<div class="kpi"><div class="kpi-label">Ingreso Total Marzo</div><div class="kpi-value" style="color:var(--green)">$699,99</div><div class="kpi-change pos">Inc. Operativo + Otros</div></div>
+<div class="kpi"><div class="kpi-label">Gasto Total Marzo</div><div class="kpi-value">$2.826,61</div><div class="kpi-change neg">▲ +12,5% vs feb</div></div>
+<div class="kpi"><div class="kpi-label">Beneficio Neto Marzo</div><div class="kpi-value" style="color:var(--red)">-$2.126,62</div><div class="kpi-change pos">▲ Mejora 65% vs feb</div></div>
+<div class="kpi"><div class="kpi-label">ROA Mensual</div><div class="kpi-value">-4,2%</div><div class="kpi-change pos">▲ Mejora vs -11,7% feb</div></div>
+<div class="kpi"><div class="kpi-label">Resultado Acum. 2026</div><div class="kpi-value" style="color:var(--red)">-$11.888,77</div><div class="kpi-change neg">3 meses negativos</div></div>
+</div>
+
+<div class="section-title">Ingresos por Grupo Contable</div>
+<div class="scroll-table">
+<table>
+<tr><th>Grupo</th><th>Concepto</th><th class="text-right">Mar 26</th><th class="text-right">Feb 26</th><th class="text-right">Ene 26</th><th class="text-right">Q1 2026</th><th class="text-right">Q4 2025</th></tr>
+<tr><td>740</td><td>Regalos, Donaciones y Legados</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">$250,21</td></tr>
+<tr><td>752</td><td>Servicios Prestados (RE/MAX neto) → ver pestaña REMAX</td><td class="text-right text-red">-$679,14</td><td class="text-right text-red">-$503,66</td><td class="text-right text-red">-$577,46</td><td class="text-right text-red">-$1.760,26</td><td class="text-right text-red">-$934,06</td></tr>
+<tr><td>754</td><td>Ingresos Empresas Propias (Andorpel)</td><td class="text-right">$700,55</td><td class="text-right">$676,04</td><td class="text-right">$650,86</td><td class="text-right">$2.027,45</td><td class="text-right">$4.700,96</td></tr>
+<tr><td></td><td style="padding-left:24px">— Salario</td><td class="text-right">$800,00</td><td class="text-right">$800,00</td><td class="text-right">$800,00</td><td class="text-right">$2.400,00</td><td class="text-right">$2.400,00</td></tr>
+<tr><td></td><td style="padding-left:24px">— Fondo Especial</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">$800,00</td></tr>
+<tr><td></td><td style="padding-left:24px">— Extraordinarios</td><td class="text-right">$400,55</td><td class="text-right">$376,04</td><td class="text-right">$350,86</td><td class="text-right">$1.127,45</td><td class="text-right">$1.500,96</td></tr>
+<tr><td></td><td style="padding-left:24px">— Dividendos</td><td class="text-right text-red">-$500,00</td><td class="text-right text-red">-$500,00</td><td class="text-right text-red">-$500,00</td><td class="text-right text-red">-$1.500,00</td><td class="text-right">—</td></tr>
+<tr><td>770</td><td>Beneficio Criptoactivos (neto) → ver pestaña Cripto</td><td class="text-right text-green">$600,19</td><td class="text-right text-red">-$4.184,20</td><td class="text-right text-red">-$1.711,58</td><td class="text-right text-red">-$5.295,59</td><td class="text-right text-red">-$9.170,84</td></tr>
+<tr><td>762</td><td>Intereses Bancarios</td><td class="text-right">$0,29</td><td class="text-right">$0,20</td><td class="text-right">$0,19</td><td class="text-right">$0,68</td><td class="text-right">$0,91</td></tr>
+<tr><td>768</td><td>Diferencias Positivas de Cambio</td><td class="text-right">$78,10</td><td class="text-right">$408,05</td><td class="text-right">$557,52</td><td class="text-right">$1.043,67</td><td class="text-right text-red">-$1.235,58</td></tr>
+<tr style="font-weight:700;background:#F5F5F5"><td colspan="2">TOTAL INGRESOS + OTROS</td><td class="text-right">$699,99</td><td class="text-right text-red">-$3.603,57</td><td class="text-right text-red">-$1.080,47</td><td class="text-right text-red">-$3.984,05</td><td class="text-right text-red">-$6.388,40</td></tr>
+</table>
+</div>
+
+<div class="section-title">Gastos por Grupo Contable — Marzo 2026</div>
+<div class="grid-2">
+<div class="chart-card"><h3>Composición del Gasto — Marzo 2026</h3><div class="chart-wrap"><canvas id="c_expense_donut"></canvas></div></div>
+<div class="chart-card"><h3>Evolución de Gastos Mensuales por Grupo</h3><div class="chart-wrap"><canvas id="c_expense_stack"></canvas></div></div>
+</div>
+
+<div class="scroll-table">
+<table>
+<tr><th>Grupo</th><th>Concepto</th><th class="text-right">Mar 26</th><th class="text-right">Feb 26</th><th class="text-right">Ene 26</th><th class="text-right">Q1 2026</th></tr>
+<tr><td>602</td><td>Aprovisionamientos</td><td class="text-right">$148,43</td><td class="text-right">$205,24</td><td class="text-right">$113,73</td><td class="text-right">$467,40</td></tr>
+<tr><td>607</td><td>Gastos Extra</td><td class="text-right">$169,25</td><td class="text-right">$29,80</td><td class="text-right">$82,09</td><td class="text-right">$281,14</td></tr>
+<tr><td>621</td><td>Vivienda</td><td class="text-right">$780,36</td><td class="text-right">$682,98</td><td class="text-right">$657,47</td><td class="text-right">$2.120,81</td></tr>
+<tr><td>624</td><td>Vehículos</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td></tr>
+<tr><td>627</td><td>Regalos</td><td class="text-right">$20,35</td><td class="text-right">$21,77</td><td class="text-right">—</td><td class="text-right">$42,12</td></tr>
+<tr><td>628</td><td>Suministros</td><td class="text-right">$93,39</td><td class="text-right">$164,44</td><td class="text-right">$133,27</td><td class="text-right">$391,10</td></tr>
+<tr><td>629</td><td>Otros Servicios</td><td class="text-right">$123,55</td><td class="text-right">$208,18</td><td class="text-right">$28,97</td><td class="text-right">$360,70</td></tr>
+<tr><td>631</td><td>Impuestos</td><td class="text-right">$110,19</td><td class="text-right">$88,76</td><td class="text-right">$72,96</td><td class="text-right">$271,91</td></tr>
+<tr><td>642</td><td>Salud</td><td class="text-right">$401,65</td><td class="text-right">$383,25</td><td class="text-right">$465,11</td><td class="text-right">$1.250,01</td></tr>
+<tr><td>649</td><td>Familiares</td><td class="text-right">$769,41</td><td class="text-right">$603,61</td><td class="text-right">$594,69</td><td class="text-right">$1.967,71</td></tr>
+<tr><td>651</td><td>Masonería</td><td class="text-right">$101,27</td><td class="text-right">$31,29</td><td class="text-right">$361,33</td><td class="text-right">$493,89</td></tr>
+<tr><td>660/668</td><td>Financieros + Dif. Cambio</td><td class="text-right">$46,53</td><td class="text-right">$46,07</td><td class="text-right">$5,02</td><td class="text-right">$97,62</td></tr>
+<tr><td>681</td><td>Amortizaciones</td><td class="text-right">$62,23</td><td class="text-right">$46,33</td><td class="text-right">$51,75</td><td class="text-right">$160,31</td></tr>
+<tr style="font-weight:700;background:#F5F5F5"><td colspan="2">TOTAL GASTOS</td><td class="text-right">$2.826,61</td><td class="text-right">$2.511,72</td><td class="text-right">$2.566,39</td><td class="text-right">$7.904,72</td></tr>
+</table>
+</div>
+
+<div class="grid-2">
+<div class="chart-card"><h3>Beneficio Neto Mensual</h3><div class="chart-wrap"><canvas id="c_net_profit"></canvas></div></div>
+<div class="chart-card"><h3>ROA Mensual (%)</h3><div class="chart-wrap"><canvas id="c_roa"></canvas></div></div>
+</div>
+
+<div class="section-title">Resumen por Ejercicio</div>
+<table>
+<tr><th>Ejercicio</th><th class="text-right">Ingresos Totales</th><th class="text-right">Gastos Totales</th><th class="text-right">Beneficio Neto</th></tr>
+<tr><td>2024</td><td class="text-right">$53.646,77 + $10.471,41</td><td class="text-right">$24.270,07</td><td class="text-right text-green">$39.848,11</td></tr>
+<tr><td>2025</td><td class="text-right">$16.529,43 - $3.480,44</td><td class="text-right">$36.029,50</td><td class="text-right text-red">-$22.980,51</td></tr>
+<tr><td>2026 (Q1)</td><td class="text-right">-$5.028,40 + $1.044,35</td><td class="text-right">$7.904,72</td><td class="text-right text-red">-$11.888,77</td></tr>
+</table>
+</div>
+
+<!-- ==================== TAB 4: ING vs GAS QQ ==================== -->
+<div class="tab-panel" id="t4">
+
+<div class="kpi-strip">
+<div class="kpi"><div class="kpi-label">Ingreso Total Q1-26 *</div><div class="kpi-value" style="color:var(--red)">-$3.984,05</div><div class="kpi-change neg">▼ vs -$6.388 Q4-25</div></div>
+<div class="kpi"><div class="kpi-label">Gasto Total Q1-26 *</div><div class="kpi-value">$7.904,72</div><div class="kpi-change pos">▼ -6,8% vs Q4-25</div></div>
+<div class="kpi"><div class="kpi-label">Resultado Neto Q1-26</div><div class="kpi-value" style="color:var(--red)">-$11.888,77</div><div class="kpi-change neg">Peor Q1 en 2 años</div></div>
+<div class="kpi"><div class="kpi-label">Ingr. Promedio Trimestral</div><div class="kpi-value">$9.318,49</div><div class="kpi-change neutral">Media 8 trimestres</div></div>
+<div class="kpi"><div class="kpi-label">Gasto Promedio Trimestral</div><div class="kpi-value">$8.538,20</div><div class="kpi-change neutral">Media 8 trimestres</div></div>
+</div>
+
+<div class="alert-box"><span class="icon">📊</span><div><strong>Nota:</strong> Q1-2026 (*) es un trimestre completo (ene-mar 2026). Los ingresos incluyen el total de ingresos operativos + otros ingresos. Los trimestres con ingresos negativos reflejan pérdidas en criptoactivos y diferencias de cambio.</div></div>
+
+<div class="grid-2">
+<div class="chart-card"><h3>Ingresos vs Gastos por Trimestre</h3><div class="chart-wrap"><canvas id="c_qq_bars"></canvas></div></div>
+<div class="chart-card"><h3>Resultado Neto por Trimestre</h3><div class="chart-wrap"><canvas id="c_qq_net"></canvas></div></div>
+</div>
+
+<div class="chart-card"><h3>Evolución Trimestral — Ingresos y Gastos</h3><div class="chart-wrap"><canvas id="c_qq_line"></canvas></div></div>
+
+<div class="section-title">Tabla Resumen Trimestral</div>
+<div class="scroll-table">
+<table>
+<tr><th>Trimestre</th><th class="text-right">Ingresos</th><th class="text-right">Gastos</th><th class="text-right">Resultado</th><th class="text-right">Margen %</th><th class="text-right">Var. Ing. QQ</th><th class="text-right">Var. Gas. QQ</th></tr>
+<tr><td>Q2-2024</td><td class="text-right">$8.750,27</td><td class="text-right">$5.338,94</td><td class="text-right text-green">$3.411,33</td><td class="text-right">39,0%</td><td class="text-right">—</td><td class="text-right">—</td></tr>
+<tr><td>Q3-2024</td><td class="text-right">$1.674,69</td><td class="text-right">$4.915,66</td><td class="text-right text-red">-$3.240,97</td><td class="text-right">-193,5%</td><td class="text-right text-red">-80,9%</td><td class="text-right text-red">-7,9%</td></tr>
+<tr><td>Q4-2024</td><td class="text-right">$24.767,91</td><td class="text-right">$9.089,38</td><td class="text-right text-green">$15.678,53</td><td class="text-right">63,3%</td><td class="text-right text-green">+1378%</td><td class="text-right text-red">+84,9%</td></tr>
+<tr><td>Q1-2025</td><td class="text-right">-$2.891,09</td><td class="text-right">$9.405,51</td><td class="text-right text-red">-$12.296,60</td><td class="text-right">n/a</td><td class="text-right text-red">n/a</td><td class="text-right text-red">+3,5%</td></tr>
+<tr><td>Q2-2025</td><td class="text-right">$15.353,58</td><td class="text-right">$10.979,02</td><td class="text-right text-green">$4.374,56</td><td class="text-right">28,5%</td><td class="text-right text-green">n/a</td><td class="text-right text-red">+16,7%</td></tr>
+<tr><td>Q3-2025</td><td class="text-right">$6.974,90</td><td class="text-right">$7.163,50</td><td class="text-right text-red">-$188,60</td><td class="text-right">-2,7%</td><td class="text-right text-red">-54,6%</td><td class="text-right text-green">-34,7%</td></tr>
+<tr><td>Q4-2025</td><td class="text-right">-$6.388,40</td><td class="text-right">$8.481,47</td><td class="text-right text-red">-$14.869,87</td><td class="text-right">n/a</td><td class="text-right text-red">n/a</td><td class="text-right text-red">+18,4%</td></tr>
+<tr><td>Q1-2026*</td><td class="text-right">-$3.984,05</td><td class="text-right">$7.904,72</td><td class="text-right text-red">-$11.888,77</td><td class="text-right">n/a</td><td class="text-right text-green">Mejora</td><td class="text-right text-green">-6,8%</td></tr>
+<tr style="font-weight:700;background:#F5F5F5"><td>PROMEDIO</td><td class="text-right">$5.532,23</td><td class="text-right">$7.909,78</td><td class="text-right text-red">-$2.377,55</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td></tr>
+</table>
+</div>
+</div>
+
+<!-- ==================== TAB 5: REMAX ==================== -->
+<div class="tab-panel" id="t5">
+
+<div class="remax-header">
+<svg class="balloon-svg" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="50" cy="38" rx="32" ry="38" fill="#DC1C2E"/>
+<ellipse cx="50" cy="38" rx="28" ry="34" fill="#E8394A"/>
+<path d="M50 76 L46 82 L54 82 Z" fill="#DC1C2E"/>
+<line x1="48" y1="82" x2="44" y2="115" stroke="#666" stroke-width="1.5"/>
+<line x1="52" y1="82" x2="56" y2="115" stroke="#666" stroke-width="1.5"/>
+<rect x="40" y="115" rx="3" width="20" height="5" fill="#003DA5"/>
+<text x="50" y="34" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="Arial">RE</text>
+<text x="50" y="47" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="Arial">MAX</text>
+</svg>
+<div><h2>Jesus Martin Frade</h2><p>Agente Inmobiliario — RE/MAX EXPRESS</p></div>
+</div>
+
+<div class="kpi-strip" style="--blue:var(--remax-blue)">
+<div class="kpi" style="border-top:3px solid var(--remax-blue)"><div class="kpi-label">Ingresos RE/MAX</div><div class="kpi-value" style="color:var(--remax-blue)">$0,00</div><div class="kpi-change neutral">Sin operaciones cerradas</div></div>
+<div class="kpi" style="border-top:3px solid var(--remax-red)"><div class="kpi-label">Gastos RE/MAX Q1-26</div><div class="kpi-value" style="color:var(--remax-red)">$1.760,26</div><div class="kpi-change neg">▲ +88,4% vs Q4-25</div></div>
+<div class="kpi" style="border-top:3px solid var(--remax-red)"><div class="kpi-label">Resultado Neto RE/MAX</div><div class="kpi-value" style="color:var(--remax-red)">-$1.760,26</div><div class="kpi-change neg">Inversión sin retorno aún</div></div>
+<div class="kpi"><div class="kpi-label">Ratio Gastos/Ingresos</div><div class="kpi-value">n/a</div><div class="kpi-change neutral">Sin ingresos</div></div>
+<div class="kpi"><div class="kpi-label">Acum. Gastos (desde oct-25)</div><div class="kpi-value" style="color:var(--remax-red)">-$2.694,32</div><div class="kpi-change neg">6 meses de inversión</div></div>
+</div>
+
+<div class="alert-box"><span class="icon">🏠</span><div><strong>Nota RE/MAX:</strong> La actividad inmobiliaria se inició en octubre 2025. Hasta el cierre de marzo 2026 no se han registrado ingresos por operaciones cerradas. Los gastos incluyen franquicia, publicidad, combustible, transporte, cartelería, representación y formación. Se considera un período de inversión y desarrollo de cartera.</div></div>
+
+<div class="grid-2">
+<div class="chart-card"><h3>Gastos RE/MAX por Mes</h3><div class="chart-wrap"><canvas id="c_remax_bars"></canvas></div></div>
+<div class="chart-card"><h3>Composición de Gastos RE/MAX — Q1 2026</h3><div class="chart-wrap"><canvas id="c_remax_donut"></canvas></div></div>
+</div>
+
+<div class="section-title" style="color:var(--remax-blue)">Desglose de Gastos RE/MAX por Subcuenta</div>
+<div class="scroll-table">
+<table>
+<tr><th>Subcuenta</th><th class="text-right">Mar 26</th><th class="text-right">Feb 26</th><th class="text-right">Ene 26</th><th class="text-right">Dic 25</th><th class="text-right">Nov 25</th><th class="text-right">Oct 25</th><th class="text-right">Total</th></tr>
+<tr><td>752027 Seguro Vehículos</td><td class="text-right">$74,26</td><td class="text-right">$65,02</td><td class="text-right">$69,16</td><td class="text-right">$35,28</td><td class="text-right">$33,91</td><td class="text-right">$35,18</td><td class="text-right">$312,81</td></tr>
+<tr><td>752031 Combustible</td><td class="text-right">$59,65</td><td class="text-right">$53,73</td><td class="text-right">$52,39</td><td class="text-right">$49,88</td><td class="text-right">$11,38</td><td class="text-right">$25,93</td><td class="text-right">$252,96</td></tr>
+<tr><td>752041 Oficina (Franquicia)</td><td class="text-right">$48,14</td><td class="text-right">$48,13</td><td class="text-right">$48,14</td><td class="text-right">$48,13</td><td class="text-right">$48,14</td><td class="text-right">$12,42</td><td class="text-right">$253,10</td></tr>
+<tr><td>752051 Representación</td><td class="text-right">$55,35</td><td class="text-right">$71,50</td><td class="text-right">$90,65</td><td class="text-right">$31,64</td><td class="text-right">$147,15</td><td class="text-right">$53,87</td><td class="text-right">$450,16</td></tr>
+<tr><td>752071 Publicidad SEM</td><td class="text-right">$30,93</td><td class="text-right">$27,64</td><td class="text-right">$130,46</td><td class="text-right">—</td><td class="text-right">$70,63</td><td class="text-right">—</td><td class="text-right">$259,66</td></tr>
+<tr><td>752046 Papelería/Imprenta</td><td class="text-right">$41,24</td><td class="text-right">$44,23</td><td class="text-right">$17,24</td><td class="text-right">$30,99</td><td class="text-right">$65,13</td><td class="text-right">$0,21</td><td class="text-right">$199,04</td></tr>
+<tr><td>752049 Cartelería</td><td class="text-right">$43,79</td><td class="text-right">$32,63</td><td class="text-right">$29,96</td><td class="text-right">$19,70</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">$126,08</td></tr>
+<tr><td>752033 Transporte Público</td><td class="text-right">$21,06</td><td class="text-right">$17,34</td><td class="text-right">$20,01</td><td class="text-right">$20,91</td><td class="text-right">$27,68</td><td class="text-right">$10,49</td><td class="text-right">$117,49</td></tr>
+<tr><td>752043 SaaS</td><td class="text-right">$60,92</td><td class="text-right">$64,27</td><td class="text-right">$27,97</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">$153,16</td></tr>
+<tr><td>752044 Teléfono/Internet</td><td class="text-right">$13,74</td><td class="text-right">$41,42</td><td class="text-right">$38,60</td><td class="text-right">$19,83</td><td class="text-right">$19,11</td><td class="text-right">$18,85</td><td class="text-right">$151,55</td></tr>
+<tr><td>752032 Autopistas</td><td class="text-right">$12,83</td><td class="text-right">$11,59</td><td class="text-right">$20,21</td><td class="text-right">$25,68</td><td class="text-right">$9,62</td><td class="text-right">$9,58</td><td class="text-right">$89,51</td></tr>
+<tr><td>752061 Formación</td><td class="text-right">—</td><td class="text-right">$3,44</td><td class="text-right">-$19,05</td><td class="text-right">$11,16</td><td class="text-right">-$63,90</td><td class="text-right">—</td><td class="text-right">-$68,35</td></tr>
+<tr><td>752021 Fotografía Inmob.</td><td class="text-right">$155,10</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">$155,10</td></tr>
+<tr><td>752030 Mantenim. Vehículos</td><td class="text-right">$46,93</td><td class="text-right">$13,22</td><td class="text-right">$9,20</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">$69,35</td></tr>
+<tr><td>752082 Amortización Inmov.</td><td class="text-right">$15,20</td><td class="text-right">$16,38</td><td class="text-right">$4,42</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">$36,00</td></tr>
+<tr style="font-weight:700;background:#E8EAF6"><td>TOTAL</td><td class="text-right">$679,14</td><td class="text-right">$503,66</td><td class="text-right">$577,46</td><td class="text-right">$341,51</td><td class="text-right">$426,02</td><td class="text-right">$166,53</td><td class="text-right">$2.694,32</td></tr>
+</table>
+</div>
+
+<div style="text-align:center;padding:16px;font-size:.72rem;color:var(--text3);margin-top:20px">Reporte RE/MAX generado al 01/04/2026</div>
+</div>
+
+</div><!-- /content -->
+
+<div class="footer">JMF — Estados Financieros Personales — Generado al 01/04/2026 — Datos expresados en USD salvo indicación contraria</div>
+
+<script>
+// TAB SWITCHING
+document.querySelectorAll('.tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.getElementById(t.dataset.tab).classList.add('active')})});
+
+const MO=['abr-25','may-25','jun-25','jul-25','ago-25','sep-25','oct-25','nov-25','dic-25','ene-26','feb-26','mar-26'];
+const COLORS={green:'#0F9D58',red:'#DB4437',blue:'#1A73E8',amber:'#F4B400',purple:'#7B1FA2',teal:'#00897B',orange:'#E65100',pink:'#C2185B',cyan:'#0097A7',indigo:'#303F9F'};
+Chart.defaults.font.family="'DM Sans',sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.plugins.legend.labels.usePointStyle=true;
+Chart.defaults.plugins.legend.labels.padding=12;
+
+// ===== TAB 1 CHARTS =====
+// Patrimonial evolution
+new Chart(document.getElementById('c_patrim'),{type:'line',data:{labels:MO,datasets:[
+{label:'Activos',data:[77442.87,78121.49,76954.81,78654.38,77025.14,76226.75,73702.66,66079.26,61649.33,58434.05,52159.73,50113.71],borderColor:COLORS.blue,backgroundColor:'rgba(26,115,232,.08)',fill:true,tension:.3,borderWidth:2},
+{label:'Capital',data:[76876.08,77148.00,76246.56,78118.12,76686.84,76057.96,73267.01,65273.36,61188.09,57541.23,51425.94,49299.32],borderColor:COLORS.purple,borderWidth:2,tension:.3,borderDash:[5,3]},
+{label:'Efectivo',data:[10073.75,8710.86,8191.35,7661.04,8737.24,7732.14,7218.22,3149.84,2850.52,2607.76,2059.76,2841.56],borderColor:COLORS.green,borderWidth:2,tension:.3,yAxisID:'y1'}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},scales:{y:{beginAtZero:false,ticks:{callback:v=>'$'+v.toLocaleString()}},y1:{position:'right',beginAtZero:false,grid:{drawOnChartArea:false},ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+
+// Asset composition donut
+new Chart(document.getElementById('c_activo_donut'),{type:'doughnut',data:{labels:['Criptoactivos','Cta. Cte. Andorpel','Inv. L/P Andorpel','Efectivo y Bancos','Inmov. Material','Intangibles','Depósitos'],datasets:[{data:[16915.22,10738.69,18500,2841.56,1039.50,36.90,41.84],backgroundColor:['#F4B400','#1A73E8','#7B1FA2','#0F9D58','#E65100','#C2185B','#00897B'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});
+
+// Cash surplus
+const cashSurp=[4411.59,-1362.89,-519.51,-530.31,1076.20,-1005.10,-513.92,-4068.38,-299.32,-242.76,-548.00,781.80];
+new Chart(document.getElementById('c_cash_surplus'),{type:'bar',data:{labels:MO,datasets:[
+{label:'Cobrado',data:[7441.19,3370.22,3249.39,1996.85,3443.85,2746.11,2508.63,4196.54,2757.92,2681.98,3168.72,3877.15],backgroundColor:'rgba(15,157,88,.7)'},
+{label:'Pagado',data:[3029.60,4733.11,3768.90,2527.16,2367.65,3751.21,3022.55,8264.92,3057.24,2924.74,3716.72,3095.35],backgroundColor:'rgba(219,68,55,.7)'}
+]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+
+// Liquidity ratio
+new Chart(document.getElementById('c_liquidity'),{type:'bar',data:{labels:MO,datasets:[{label:'Ratio Liquidez',data:[99.9,58.3,78.7,107.4,165.8,328.4,121.1,56.1,88.7,42.7,43.8,37.4],backgroundColor:function(){return [99.9,58.3,78.7,107.4,165.8,328.4,121.1,56.1,88.7,42.7,43.8,37.4].map(v=>v>50?'rgba(15,157,88,.7)':'rgba(219,68,55,.7)')}(),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+
+// Credit donut
+new Chart(document.getElementById('c_credit_donut'),{type:'doughnut',data:{labels:['ICBC (87%)','Bco. Pcia. Bs. As. (7%)','Supervielle (6%)'],datasets:[{data:[10891,937.4,755],backgroundColor:['#1A73E8','#F4B400','#0F9D58'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+
+// ===== TAB 2 CHARTS =====
+new Chart(document.getElementById('c_crypto_donut'),{type:'doughnut',data:{labels:['BTC','ALGO','DOT','SOL','ETH','ADA','BNB','Otros'],datasets:[{data:[13724.25,949.24,797.20,486.06,338.20,303.97,112.12,204.18],backgroundColor:['#F7931A','#000','#E6007A','#9945FF','#627EEA','#0033AD','#F0B90B','#999'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});
+
+new Chart(document.getElementById('c_crypto_line'),{type:'line',data:{labels:MO,datasets:[{label:'Valor Total Cripto',data:[34831.88,29105.38,29427.96,33357.13,31249.52,32432.00,30095.30,24588.26,22961.16,21249.58,16315.03,16915.22],borderColor:'#F7931A',backgroundColor:'rgba(247,147,26,.1)',fill:true,tension:.3,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+
+const cryptoPL=[5043.09,1773.50,322.58,3929.17,-2107.61,1182.48,-2336.70,-5507.04,-1327.10,-1711.58,-4184.20,600.19];
+new Chart(document.getElementById('c_crypto_pl'),{type:'bar',data:{labels:MO,datasets:[{label:'P&L Cripto',data:cryptoPL,backgroundColor:cryptoPL.map(v=>v>=0?'rgba(15,157,88,.8)':'rgba(219,68,55,.8)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+
+// ===== TAB 3 CHARTS =====
+const expMar={Vivienda:780.36,Familiares:769.41,Salud:401.65,Masonería:101.27,Extra:169.25,Aprovision:148.43,Impuestos:110.19,Suministros:93.39,Otros:123.55,Financieros:46.53,Amortiz:62.23,Regalos:20.35};
+new Chart(document.getElementById('c_expense_donut'),{type:'doughnut',data:{labels:Object.keys(expMar),datasets:[{data:Object.values(expMar),backgroundColor:['#1A73E8','#E65100','#DB4437','#7B1FA2','#F4B400','#0F9D58','#C2185B','#00897B','#303F9F','#666','#999','#E91E63'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10}}}}}});
+
+// Expense stacked bar
+new Chart(document.getElementById('c_expense_stack'),{type:'bar',data:{labels:MO,datasets:[
+{label:'Vivienda',data:[645.47,706.91,726.87,757.61,725.74,756.51,690.56,700.08,705.96,657.47,682.98,780.36],backgroundColor:'#1A73E8'},
+{label:'Familiares',data:[1061.26,581.43,623.23,635.52,607.85,594.04,631.44,541.89,860.89,594.69,603.61,769.41],backgroundColor:'#E65100'},
+{label:'Salud',data:[256.74,283.91,275.45,283.69,263.99,236.65,216.66,224.87,373.56,465.11,383.25,401.65],backgroundColor:'#DB4437'},
+{label:'Otros',data:[1171.51,2542.03,2104.21,827.05,724.26,750.59,1262.26,1601.14,672.16,849.12,841.88,875.19],backgroundColor:'#999'}
+]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true,ticks:{callback:v=>'$'+v.toLocaleString()}}},plugins:{legend:{labels:{font:{size:10}}}}}});
+
+const netP=[5004.08,271.92,-901.44,1871.56,-1431.28,-628.88,-2790.95,-7993.65,-4085.27,-3646.86,-6115.29,-2126.62];
+new Chart(document.getElementById('c_net_profit'),{type:'bar',data:{labels:MO,datasets:[{label:'Beneficio Neto',data:netP,backgroundColor:netP.map(v=>v>=0?'rgba(15,157,88,.8)':'rgba(219,68,55,.8)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+
+const roa=[6.5,0.3,-1.2,2.4,-1.9,-0.8,-3.8,-12.1,-6.6,-6.2,-11.7,-4.2];
+new Chart(document.getElementById('c_roa'),{type:'line',data:{labels:MO,datasets:[{label:'ROA %',data:roa,borderColor:COLORS.blue,backgroundColor:'rgba(26,115,232,.1)',fill:true,tension:.3,borderWidth:2},{label:'Ref. 0%',data:Array(12).fill(0),borderColor:'#ccc',borderDash:[3,3],borderWidth:1,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'%'}}}}});
+
+// ===== TAB 4 CHARTS =====
+const QQ=['Q2-24','Q3-24','Q4-24','Q1-25','Q2-25','Q3-25','Q4-25','Q1-26'];
+const qqInc=[8750.27,1674.69,24767.91,-2891.09,15353.58,6974.90,-6388.40,-3984.05];
+const qqExp=[5338.94,4915.66,9089.38,9405.51,10979.02,7163.50,8481.47,7904.72];
+const qqNet=[3411.33,-3240.97,15678.53,-12296.60,4374.56,-188.60,-14869.87,-11888.77];
+
+new Chart(document.getElementById('c_qq_bars'),{type:'bar',data:{labels:QQ,datasets:[
+{label:'Ingresos',data:qqInc,backgroundColor:'rgba(15,157,88,.75)',borderRadius:4},
+{label:'Gastos',data:qqExp,backgroundColor:'rgba(219,68,55,.75)',borderRadius:4}
+]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+
+new Chart(document.getElementById('c_qq_net'),{type:'bar',data:{labels:QQ,datasets:[{label:'Resultado Neto',data:qqNet,backgroundColor:qqNet.map(v=>v>=0?'rgba(15,157,88,.8)':'rgba(219,68,55,.8)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+
+new Chart(document.getElementById('c_qq_line'),{type:'line',data:{labels:QQ,datasets:[
+{label:'Ingresos',data:qqInc,borderColor:COLORS.green,backgroundColor:'rgba(15,157,88,.08)',fill:true,tension:.3,borderWidth:2},
+{label:'Gastos',data:qqExp,borderColor:COLORS.red,backgroundColor:'rgba(219,68,55,.08)',fill:true,tension:.3,borderWidth:2}
+]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+
+// ===== TAB 5 CHARTS =====
+const rxMo=['oct-25','nov-25','dic-25','ene-26','feb-26','mar-26'];
+const rxExp=[166.53,426.02,341.51,577.46,503.66,679.14];
+new Chart(document.getElementById('c_remax_bars'),{type:'bar',data:{labels:rxMo,datasets:[{label:'Gastos RE/MAX',data:rxExp,backgroundColor:'rgba(0,61,165,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()}}}}});
+
+new Chart(document.getElementById('c_remax_donut'),{type:'doughnut',data:{labels:['Representación','Seguro Veh.','Combustible','Oficina/Franq.','SaaS','Fotografía','Publicidad','Papelería','Cartelería','Transp. Públ.','Teléfono','Autopistas','Mantenim.','Amortización','Formación'],datasets:[{data:[217.50,208.44,165.77,144.41,153.16,155.10,189.03,102.71,106.38,58.41,93.76,44.63,69.35,36.00,15.61],backgroundColor:['#003DA5','#DC1C2E','#1565C0','#1976D2','#1E88E5','#42A5F5','#64B5F6','#90CAF9','#BBDEFB','#FF5252','#FF8A80','#E57373','#EF9A9A','#666','#999'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:9}}}}}});
+</script>
+</body>
+</html>
